@@ -1,8 +1,9 @@
 MODEL:
   TYPE: vit
-  NAME: simmim_pretrain
+  NAME: simmim_pretrain_modis_normed_vit
   DROP_PATH_RATE: 0.1
   VIT:
+    IN_CHANS: 7
     EMBED_DIM: 768
     DEPTH: 12
     NUM_HEADS: 12
@@ -26,4 +27,4 @@ TRAIN:
     MULTISTEPS: [700,]
 PRINT_FREQ: 100
 SAVE_FREQ: 5
-TAG: simmim_pretrain__vit_base__img224__800ep
+TAG: simmim_pretrain__modis_vit_base__img224__800ep_no_normed

@@ -130,6 +130,7 @@ def remap_pretrained_keys_swin(model, checkpoint_model, logger):
     all_keys = list(checkpoint_model.keys())
     for key in all_keys:
         if "relative_position_bias_table" in key:
+            logger.info(f"Key: {key}")
             relative_position_bias_table_pretrained = checkpoint_model[key]
             relative_position_bias_table_current = state_dict[key]
             L1, nH1 = relative_position_bias_table_pretrained.size()

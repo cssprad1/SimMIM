@@ -7,6 +7,7 @@
 # --------------------------------------------------------
 
 from .swin_transformer import build_swin
+from .swin_transformer_v2 import build_swinv2
 from .vision_transformer import build_vit
 from .simmim import build_simmim
 
@@ -18,6 +19,8 @@ def build_model(config, is_pretrain=True):
         model_type = config.MODEL.TYPE
         if model_type == 'swin':
             model = build_swin(config)
+        elif model_type == 'swinv2':
+            model = build_swinv2(config)
         elif model_type == 'vit':
             model = build_vit(config)
         else:

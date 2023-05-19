@@ -216,7 +216,7 @@ class RelativePositionBias(nn.Module):
 class VisionTransformer(nn.Module):
     """ Vision Transformer with support for patch or hybrid CNN input stage
     """
-    def __init__(self, img_size=224, patch_size=16, in_chans=3, num_classes=1000, embed_dim=768, depth=12,
+    def __init__(self, img_size=224, patch_size=16, in_chans=7, num_classes=1000, embed_dim=768, depth=12,
                  num_heads=12, mlp_ratio=4., qkv_bias=False, qk_scale=None, drop_rate=0., attn_drop_rate=0.,
                  drop_path_rate=0., norm_layer=nn.LayerNorm, init_values=None,
                  use_abs_pos_emb=True, use_rel_pos_bias=False, use_shared_rel_pos_bias=False,
@@ -325,6 +325,26 @@ class VisionTransformer(nn.Module):
             return self.fc_norm(t.mean(1))
         else:
             return x[:, 0]
+
+    def extra_features(self, x):
+        x = self.patch_embed(x)
+        batch_size, seq_len, _ = x.size()
+
+        cls_tokens = self.cls_token.expand(batch_size, -1, -1)  # stole cls_tokens impl from Phil Wang, thanks
+        x = torch.cat((cls_tokens, x), dim=1)
+        if self.pos_embed is not None:
+            x = x + self.pos_embed
+        x = self.pos_drop(x)
+
+        rel_pos_bias = self.rel_pos_bias() if self.rel_pos_bias is not None else None
+
+        feature = []
+        for blk in self.blocks:
+            x = blk(x, rel_pos_bias=rel_pos_bias)
+            bs, n, f = x.shape
+            h = int(n**0.5)
+            feature.append(x.view(-1, h, h, f).permute(0, 3, 1, 2).contiguous())
+        return feature
 
     def forward(self, x):
         x = self.forward_features(x)
