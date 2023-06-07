@@ -1,0 +1,24 @@
+#!/bin/bash
+
+#SBATCH -J finetune_swin 
+#SBATCH -t 4-00:00:00
+#SBATCH -p dgx
+#SBATCH -G 8
+#SBATCH -N 1
+
+# singularity or anaconda
+module load anaconda
+conda activate rapids-23.02
+
+export PYTHONPATH=$PWD:$PWD/SimMIM
+export NGPUS=8
+
+srun -o $2 python -m torch.distributed.launch --nproc_per_node $NGPUS \
+	SimMIM/modis_finetune.py \
+	--cfg $1 \
+	--pretrained $3 \
+	--data-path /explore/nobackup/projects/ilab/data/satnet/training_* \
+	--batch-size 256 \
+	--output . \
+	--amp-opt-level O0
+
