@@ -16,11 +16,14 @@ if [ ! -d "$CONTAINERPATH" ]; then
   singularity build --sandbox /lscratch/$(whoami)/containers/pt-caney-ft docker://nasanccs/pytorch-caney:dev
 fi
 
+module load singularity
+
 export PYTHONPATH=$PWD:$PWD/SimMIM
 export NGPUS=8
 
 srun -o $2 singularity exec --nv -B /explore,/panfs,/lscratch \
-	/usr/bin/python -m torch.distributed.launch --nproc_per_node $NGPUS \
+	$CONTAINERPATH \
+	python -m torch.distributed.launch --nproc_per_node $NGPUS \
 	SimMIM/modis_finetune.py \
 	--cfg $1 \
 	--pretrained $3 \

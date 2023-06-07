@@ -43,10 +43,13 @@ if [ ! -d "$CONTAINERPATH" ]; then
   singularity build --sandbox /lscratch/$(whoami)/containers/pt-caney-ft docker://nasanccs/pytorch-caney:dev
 fi
 
+module load singularity
+
 export PYTHONPATH=$PWD:$PWD/SimMIM
 
 srun singularity exec --nv -B /explore,/panfs,/lscratch \
-	/usr/bin/python SimMIM/binary_finetune_multinode.py \
+	$CONTAINERPATH \
+	python SimMIM/binary_finetune_multinode.py \
 	--cfg $1 \
 	--pretrained $2 \
 	--data-path /explore/nobackup/projects/ilab/data/satnet/tree_dataset/ \

@@ -18,11 +18,14 @@ fi
 export PYTHONPATH=$PWD:$PWD/SimMIM
 export NGPUS=4
 
-srun -o $2 singularity exec --nv -B /explore,/panfs,/lscratch \
-	/usr/bin/python -m torch.distributed.launch --nproc_per_node $NGPUS \
-	SimMIM/modis_finetune.py \
+module load singularity
+
+srun singularity exec --nv -B /explore,/panfs,/lscratch \
+	/lscratch/$(whoami)/containers/pt-caney-ft \
+	python -m torch.distributed.launch --nproc_per_node $NGPUS \
+	SimMIM/binary_finetune.py \
 	--cfg $1 \
-	--pretrained $3 \
+	--pretrained $2 \
 	--data-path /explore/nobackup/projects/ilab/data/satnet/training_* \
 	--batch-size 256 \
 	--output . \
