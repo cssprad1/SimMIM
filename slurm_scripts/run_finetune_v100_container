@@ -1,0 +1,30 @@
+#!/bin/bash
+
+#SBATCH -J finetune_swin 
+#SBATCH -t 2-00:00:00
+#SBATCH -G 4
+#SBATCH -N 1
+
+# singularity or anaconda
+export CONTAINERPATH=/lscratch/$(whoami)/containers/pt-caney-ft
+if [ ! -d "$CONTAINERPATH" ]; then
+  echo "$CONTAINERPATH does not exist, building."
+  mkdir /lscratch/$(whoami)
+  mkdir /lscratch/$(whoami)/containers
+  module load singularity
+  singularity build --sandbox /lscratch/$(whoami)/containers/pt-caney-ft docker://nasanccs/pytorch-caney:dev
+fi
+
+export PYTHONPATH=$PWD:$PWD/SimMIM
+export NGPUS=4
+
+srun -o $2 singularity exec --nv -B /explore,/panfs,/lscratch \
+	/usr/bin/python -m torch.distributed.launch --nproc_per_node $NGPUS \
+	SimMIM/modis_finetune.py \
+	--cfg $1 \
+	--pretrained $3 \
+	--data-path /explore/nobackup/projects/ilab/data/satnet/training_* \
+	--batch-size 256 \
+	--output . \
+	--amp-opt-level O0
+

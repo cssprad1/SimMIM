@@ -7,7 +7,7 @@
 #SBATCH --cpus-per-task=4        # cpu-cores per task (>1 if multi-threaded tasks)
 #SBATCH --mem=240GB               # total memory per node 
 #SBATCH --time=2-23:59:00          # total run time limit (HH:MM:SS)
-#SBATCH --exclude=gpu014,gpu022
+#SBATCH --exclude=gpu022
 
 
 
@@ -34,19 +34,22 @@ export MASTER_ADDR=$master_addr
 echo "MASTER_ADDR="$MASTER_ADDR
 
 # Singularity or anaconda should work
-mkdir /lscratch/cssprad1
-mkdir /lscratch/cssprad1/containers
-
-module load singularity
-singularity build --sandbox /lscratch/cssprad1/containers/pt-caney docker://nasanccs/pytorch-caney:latest
+export CONTAINERPATH=/lscratch/$(whoami)/containers/pt-caney-ft
+if [ ! -d "$CONTAINERPATH" ]; then
+  echo "$CONTAINERPATH does not exist, building."
+  mkdir /lscratch/$(whoami)
+  mkdir /lscratch/$(whoami)/containers
+  module load singularity
+  singularity build --sandbox /lscratch/$(whoami)/containers/pt-caney-ft docker://nasanccs/pytorch-caney:dev
+fi
 
 export PYTHONPATH=$PWD:$PWD/SimMIM
 
 srun singularity exec --nv -B /explore,/panfs,/lscratch \
-	python SimMIM/binary_finetune_multinode.py \
+	/usr/bin/python SimMIM/binary_finetune_multinode.py \
 	--cfg $1 \
 	--pretrained $2 \
-	--data-path /explore/nobackup/projects/ilab/data/satnet/training_* \
+	--data-path /explore/nobackup/projects/ilab/data/satnet/tree_dataset/ \
 	--batch-size 256 \
 	--output . \
 	--amp-opt-level O0
